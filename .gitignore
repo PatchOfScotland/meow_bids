@@ -1,4 +1,5 @@
-
+MRI_data/
+bids-starter-kit/
 OpenNeuroPET_phantoms/
 
 # Byte-compiled / optimized / DLL files
