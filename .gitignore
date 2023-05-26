@@ -1,6 +1,10 @@
 MRI_data/
 bids-starter-kit/
 OpenNeuroPET_phantoms/
+job_output/
+job_queue/
+meow/
+tmp/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

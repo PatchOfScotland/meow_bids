@@ -14,7 +14,7 @@ mkdir $int_dir
 mkdir -p $output_dir
 
 # Get templates repo and clone pet specific example
-#git clone git@github.com:bids-standard/bids-starter-kit.git $bids_starter_kit
+git clone git@github.com:bids-standard/bids-starter-kit.git $bids_starter_kit
 
 ###### Setup bids structure and conversion ------------------------------------
 cp $bids_starter_kit/templates/* $output_dir/
@@ -45,17 +45,17 @@ echo -e "{\"BIDSVersion\":\"1.6.0\",
     \"Funding\":[\"0$\"],
     \"DatasetDOI\":\"\"}" > $output_dir/dataset_description.json
 
-base=$(pwd)
-# Rename files and delete some more unneeded files
-cd $output_dir/sub-01/ses-01/anat
-for i in *ShortExample*; do 
-    mv "$i" "`echo $i | sed 's/ShortExample//'`"; 
-done
-mv "sub-01_ses-01_task-_pet.json" "sub-01_ses-01_pet.json"; 
-for i in *Autosampler*; do 
-    rm $i; 
-done
-cd $base
+#base=$(pwd)
+## Rename files and delete some more unneeded files
+#cd $output_dir/sub-01/ses-01/anat
+#for i in *ShortExample*; do 
+#    mv "$i" "`echo $i | sed 's/ShortExample//'`"; 
+#done
+#mv "sub-01_ses-01_task-_pet.json" "sub-01_ses-01_pet.json"; 
+#for i in *Autosampler*; do 
+#    rm $i; 
+#done
+#cd $base
 
 ###### Convert dcm data to bids compatible niix data --------------------------
 # Get each session in turn
@@ -98,7 +98,7 @@ done
 
 ###### Cleanup after generation -----------------------------------------------
 # Cleanup working directories
-#yes | rm -r $int_dir $bids_starter_kit
+yes | rm -r $int_dir $bids_starter_kit
 
 ###### Validate the dataset ---------------------------------------------------
 bids-validator $output_dir
