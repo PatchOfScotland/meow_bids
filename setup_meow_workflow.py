@@ -105,14 +105,31 @@ p_analysis = FileEventPattern(
     analysing_dir + "/*/README",
     "analysis_recipe",
     "user_dir",
+    parameters={
+        "analysing_dir": os.path.join(base_dir, analysing_dir, dataset),
+        "result_dir": os.path.join(base_dir, result_dir),
+        "dataset": dataset
+    },
     notifications={
         NOTIFICATION_EMAIL: "user@localhost",
-        NOTIFICATION_MSG: "Analyis in bids data at {DIR}."
+        NOTIFICATION_MSG: "Analyis of bids data at {DIR}."
     }
 )
 r_analysis = BashRecipe(
     "analysis_recipe",
-    read_file_lines("recipes/notification.sh")
+    read_file_lines("recipes/analysis.sh")
+)
+
+# Notify user of complete analysis
+p_complete = FileEventPattern(
+    "completion_pattern",
+    result_dir + "/*/README",
+    "notification_recipe",
+    "analysing_dir",
+    notifications={
+        NOTIFICATION_EMAIL: "user@localhost",
+        NOTIFICATION_MSG: "Analyis complete for bids data at {DIR}."
+    }
 )
 
 patterns = assemble_patterns_dict(
@@ -120,7 +137,8 @@ patterns = assemble_patterns_dict(
         p_convert, 
         p_validate, 
         p_notify, 
-        p_analysis 
+        p_analysis,
+        p_complete,
     ]
 )
 
@@ -129,7 +147,7 @@ recipes = assemble_recipes_dict(
         r_convert, 
         r_validate, 
         r_notify, 
-        r_analysis 
+        r_analysis
     ]
 )
 
