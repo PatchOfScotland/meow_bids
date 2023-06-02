@@ -6,7 +6,12 @@ output_base="$HOME/Documents/Research/Python/meow_bids/MRI_data/generated"
 bids_starter_kit="bids-starter-kit"
 
 experiment=$(cut -d'/' -f 3 <<<$input_base)
-session=$(cut -d'/' -f 4 <<<$input_base)
+subject=$(cut -d'/' -f 4 <<<$input_base)
+session=$(cut -d'/' -f 5 <<<$input_base)
+
+echo "experiment: ${experiment}"
+echo "subject: ${subject}"
+echo "session: ${session}"
 
 output_dir="${output_base}/${experiment}"
 
@@ -45,7 +50,7 @@ echo "    \"Funding\":[\"0$\"],"                                    >> $output_d
 echo "    \"DatasetDOI\":\"\""                                      >> $output_dir/dataset_description.json
 echo "}"                                                            >> $output_dir/dataset_description.json
 
-input_experiment_dir=$(cut -d'/' -f -3 <<<$input_base)
+input_experiment_dir=$(cut -d'/' -f -4 <<<$input_base)
 sub_dirs=$(find $input_experiment_dir/* -maxdepth 0 -type d)
 session_count=0
 
@@ -56,19 +61,19 @@ do
     ses="ses-0$session_count"
 
     # Clone pet specific example
-    mkdir -p "$output_dir/sub-01/${ses}/anat"
-    rm -rf "$output_dir/sub-01/${ses}/anat/*Full*"
+    mkdir -p "$output_dir/${subject}/${ses}/anat"
+    rm -rf "$output_dir/${subject}/${ses}/anat/*Full*"
 
     dcm2niix4pet $sub_dir -d $int_dir
     # Copy over converted data
     base=$(pwd)
     cd $int_dir
     for i in *.json; do 
-        mv $i "$output_dir/sub-01/${ses}/anat/sub-01_${ses}_T1w.json"
+        mv $i "$output_dir/${subject}/${ses}/anat/${subject}_${ses}_T1w.json"
     done
     for i in *.nii.gz; do 
-        mv $i "$output_dir/sub-01/${ses}/anat/sub-01_${ses}_T1w.nii.gz"
-        gzip -d -f "$output_dir/sub-01/${ses}/anat/sub-01_${ses}_T1w.nii.gz"
+        mv $i "$output_dir/${subject}/${ses}/anat/${subject}_${ses}_T1w.nii.gz"
+        gzip -d -f "$output_dir/${subject}/${ses}/anat/${subject}_${ses}_T1w.nii.gz"
     done
     cd $base
 done

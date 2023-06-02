@@ -1,6 +1,7 @@
 
 import os
 import shutil
+import socket
 
 from meow_base.core.runner import MeowRunner
 from meow_base.core.vars import DIR_CREATE_EVENT, DIR_MODIFY_EVENT, \
@@ -21,9 +22,23 @@ result_dir =     "result"
 
 dataset = "martin_mri"
 
-start_copy = ["3"]
-ongoing_copy = ["5", "8"]
+raw_files = {
+    "sub-01": (["3", "5", "8"], []),
+    "sub-02": (["3", "5"], ["8"]),
+    "sub-03": ([], ["3", "5", "8"]),
+}
+
 copy_delay = 15
+final_delay = 15
+
+if socket.gethostname() == "macavity":
+    datastore = "/home/patch/Documents/Research/Datasets"
+    experiment_dir = "/home/patch/Documents/Research/Python"
+    analysis_recipe = "recipes/dummy_analysis.sh"
+else:
+    datastore = "/data"
+    experiment_dir = "/home/patch"
+    analysis_recipe = "recipes/analysis.sh"
 
 for r in [ "job_output", "job_queue", base_dir ]:
     rmtree(r)
@@ -33,23 +48,24 @@ for d in [ raw_dir, validating_dir, analysing_dir, user_dir, result_dir ]:
     make_dir(p, can_exist=True)
 
 # Only load first two sessions, the last will be added later
-for t in start_copy:
-    target = os.path.join(base_dir, raw_dir, dataset, t)
-    make_dir(target, can_exist=True)
-    shutil.copytree(
-        f"/home/patch/Documents/Research/Datasets/MRI_data/sourcedata/{t}", 
-        target,
-        dirs_exist_ok=True
-    )
+for subject, files in raw_files.items():
+    for t in files[0]:
+        target = os.path.join(base_dir, raw_dir, dataset, subject, t)
+        make_dir(target, can_exist=True)
+        shutil.copytree(
+            os.path.join(datastore, "MRI_data", "sourcedata", t),
+            target,
+            dirs_exist_ok=True
+        )
 
 # Automatic conversion of bids data
 p_convert = FileEventPattern(
     "conversion_pattern",
-    os.path.join(raw_dir, "*", "*"),
+    os.path.join(raw_dir, "*", "*", "*"),
     "conversion_recipe",
     "input_base",
     parameters={
-        "output_base": os.path.sep + os.path.join("home", "patch", "Documents", "Research", "Python", "meow_bids",  base_dir, validating_dir),
+        "output_base": os.path.join(experiment_dir, "meow_bids",  base_dir, validating_dir),
     },
     event_mask=[
         DIR_CREATE_EVENT,
@@ -109,15 +125,11 @@ p_analysis = FileEventPattern(
         "analysing_dir": os.path.join(base_dir, analysing_dir, dataset),
         "result_dir": os.path.join(base_dir, result_dir),
         "dataset": dataset
-    },
-    notifications={
-        NOTIFICATION_EMAIL: "user@localhost",
-        NOTIFICATION_MSG: "Analyis of bids data at {DIR}."
     }
 )
 r_analysis = BashRecipe(
     "analysis_recipe",
-    read_file_lines("recipes/analysis.sh")
+    read_file_lines(analysis_recipe)
 )
 
 # Notify user of complete analysis
@@ -173,17 +185,20 @@ runner.start()
 import time
 time.sleep(copy_delay)
 
-for t in ongoing_copy:
-    target = os.path.join(base_dir, raw_dir, dataset, t)
-    make_dir(target, can_exist=True)
-    shutil.copytree(
-        f"/home/patch/Documents/Research/Datasets/MRI_data/sourcedata/{t}", 
-        target,
-        dirs_exist_ok=True
-    )
 
-    time.sleep(copy_delay)
+for subject, files in raw_files.items():
+    for t in files[1]:
+        target = os.path.join(base_dir, raw_dir, dataset, subject, t)
+        make_dir(target, can_exist=True)
+        shutil.copytree(
+            os.path.join(datastore, "MRI_data", "sourcedata", t),
+            target,
+            dirs_exist_ok=True
+        )
 
+        time.sleep(copy_delay)
+
+time.sleep(final_delay)
 
 print(runner.monitors[0].get_rules())
 
