@@ -124,7 +124,8 @@ p_analysis = FileEventPattern(
     parameters={
         "analysing_dir": os.path.join(base_dir, analysing_dir, dataset),
         "result_dir": os.path.join(base_dir, result_dir),
-        "dataset": dataset
+        "dataset": dataset,
+        "base": "/home/patch/meow_bids"
     }
 )
 r_analysis = BashRecipe(
@@ -168,7 +169,7 @@ runner = MeowRunner(
         base_dir,
         patterns,
         recipes, 
-        logging=4
+        logging=3
     ),
     BashHandler(
         pause_time=1
