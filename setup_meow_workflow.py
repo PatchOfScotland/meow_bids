@@ -48,8 +48,9 @@ uid = getpwnam('patch').pw_uid
 gid = getgrnam('patch')[2]
 
 for r in [ "job_output", "job_queue", base_dir ]:
-    os.chown(r, uid, gid)
-    rmtree(r)
+    if os.path.exists(r):
+        os.chown(r, uid, gid)
+        rmtree(r)
 
 for d in [ raw_dir, validating_dir, analysing_dir, user_dir, result_dir ]:
     p = os.path.join(base_dir, d)
