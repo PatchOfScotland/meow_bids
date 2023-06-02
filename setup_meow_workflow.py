@@ -4,6 +4,9 @@ import shutil
 import socket
 import time
 
+from grp import getgrnam
+from pwd import getpwnam
+
 from meow_base.core.runner import MeowRunner
 from meow_base.core.vars import DIR_CREATE_EVENT, DIR_MODIFY_EVENT, \
     DIR_RETROACTIVE_EVENT, NOTIFICATION_EMAIL, NOTIFICATION_MSG, \
@@ -41,7 +44,11 @@ else:
     experiment_dir = "/home/patch"
     analysis_recipe = "recipes/analysis.sh"
 
+uid = getpwnam('patch').pw_uid
+gid = getgrnam('patch')[2]
+
 for r in [ "job_output", "job_queue", base_dir ]:
+    os.chown(r, uid, gid)
     rmtree(r)
 
 for d in [ raw_dir, validating_dir, analysing_dir, user_dir, result_dir ]:
@@ -197,13 +204,14 @@ for subject, files in raw_files.items():
         )
 
 idle_count = 0
+completed_jobs = -1
 while idle_count < 30:
-    completed_jobs = os.listdir()
-    if len(os.listdir(DEFAULT_JOB_QUEUE_DIR)) == 0:
+    if (len(os.listdir(DEFAULT_JOB_QUEUE_DIR)) == 0) and (completed_jobs == len(os.listdir(DEFAULT_JOB_OUTPUT_DIR))) :
         idle_count += 1
     else:
         idle_count = 0
+    completed_jobs = len(os.listdir(DEFAULT_JOB_OUTPUT_DIR))
 
-
+    time.sleep(1)
 
 runner.stop()
