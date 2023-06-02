@@ -2,10 +2,12 @@
 import os
 import shutil
 import socket
+import time
 
 from meow_base.core.runner import MeowRunner
 from meow_base.core.vars import DIR_CREATE_EVENT, DIR_MODIFY_EVENT, \
-    DIR_RETROACTIVE_EVENT, NOTIFICATION_EMAIL, NOTIFICATION_MSG
+    DIR_RETROACTIVE_EVENT, NOTIFICATION_EMAIL, NOTIFICATION_MSG, \
+    DEFAULT_JOB_OUTPUT_DIR, DEFAULT_JOB_QUEUE_DIR
 from meow_base.conductors import LocalBashConductor, LocalPythonConductor
 from meow_base.patterns import FileEventPattern, WatchdogMonitor
 from meow_base.recipes import BashRecipe, BashHandler, PythonRecipe, PythonHandler
@@ -29,7 +31,6 @@ raw_files = {
 }
 
 copy_delay = 15
-final_delay = 15
 
 if socket.gethostname() == "macavity":
     datastore = "/home/patch/Documents/Research/Datasets"
@@ -183,12 +184,10 @@ runner = MeowRunner(
 
 runner.start()
 
-import time
-time.sleep(copy_delay)
-
-
 for subject, files in raw_files.items():
     for t in files[1]:
+        time.sleep(copy_delay)
+
         target = os.path.join(base_dir, raw_dir, dataset, subject, t)
         make_dir(target, can_exist=True)
         shutil.copytree(
@@ -197,12 +196,14 @@ for subject, files in raw_files.items():
             dirs_exist_ok=True
         )
 
-        time.sleep(copy_delay)
+idle_count = 0
+while idle_count < 30:
+    completed_jobs = os.listdir()
+    if len(os.listdir(DEFAULT_JOB_QUEUE_DIR)) == 0:
+        idle_count += 1
+    else:
+        idle_count = 0
 
-time.sleep(final_delay)
 
-print(runner.monitors[0].get_rules())
-
-print(len(runner.event_queue))
 
 runner.stop()
