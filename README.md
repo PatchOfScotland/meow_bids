@@ -9,5 +9,8 @@ The workflow itself can be started with:
 
     python3 setup_meow_workflow.py
 
+Comments have been added to setup_meow_workflow.py, explaining the workflow 
+process
+
 Note that software installs found in notes.md will need to be followed before 
 workflow will run.

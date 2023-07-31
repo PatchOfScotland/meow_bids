@@ -25,19 +25,35 @@ analysing_dir =  "analysing"
 user_dir =       "user"
 result_dir =     "result"
 
+# Note that this dataset only has a single subject, but that we duplicate it to
+# simulate multiple subjects. The provided dataset has three sessions within it
 dataset = "martin_mri"
 
+# The three subjects each start with a varying number of sessions
 raw_files = {
+    # The first subject starts with all three sessions present
     "sub-01": (["3", "5", "8"], []),
+    # The second subject start with two sessions, the third is at runtime, 
+    # after a delay
     "sub-02": (["3", "5"], ["8"]),
+    # The third subject does not exist at all at the start, and is added after 
+    # a delay
     "sub-03": ([], ["3", "5", "8"]),
 }
 
+# Arbitrary delay for how long to wait between adding new sessions
 copy_delay = 15
 
+# Some setup paths dependent on the machine running the analysis. These will 
+# need to be set manaually according to your local setup
 if socket.gethostname() == "macavity":
+    # Where the raw data is stored
     datastore = "/home/patch/Documents/Research/Datasets"
+    # Where the analysis will be conducted
     experiment_dir = "/home/patch/Documents/Research/Python"
+    # Note this recipe script does no significant analysis, useful for testing 
+    # the structure if you are running on a machine without the resources to do
+    # the actual analysis processing
     analysis_recipe = "recipes/dummy_analysis.sh"
 else:
     datastore = "/data"
@@ -47,15 +63,19 @@ else:
 uid = getpwnam('patch').pw_uid
 gid = getgrnam('patch')[2]
 
+# Reset the meow directoires. not stricly necessary, but does make the output 
+# easier to read
 for r in [ "job_output", "job_queue", base_dir ]:
     if os.path.exists(r):
         os.chown(r, uid, gid)
         rmtree(r)
 
+# setup some directories to store the varying states of data
 for d in [ raw_dir, validating_dir, analysing_dir, user_dir, result_dir ]:
     p = os.path.join(base_dir, d)
     make_dir(p, can_exist=True)
 
+# Create the initial data state
 for subject, files in raw_files.items():
     for t in files[0]:
         target = os.path.join(base_dir, raw_dir, dataset, subject, t)
@@ -172,11 +192,13 @@ recipes = assemble_recipes_dict(
     ]
 )
 
+# The actual runner, that will conduct all scheduling and analysis
 runner = MeowRunner(
     WatchdogMonitor(
         base_dir,
         patterns,
         recipes, 
+        # This can be set to 0 to turn off logging
         logging=3
     ),
     BashHandler(
@@ -191,6 +213,8 @@ runner = MeowRunner(
 
 runner.start()
 
+# create new sessions and subjects at runtime. A delay will happen before 
+# copying each new subject
 for subject, files in raw_files.items():
     for t in files[1]:
         time.sleep(copy_delay)
@@ -203,6 +227,9 @@ for subject, files in raw_files.items():
             dirs_exist_ok=True
         )
 
+# Counters to determine when the runner is done. As a rules-based system it 
+# will never be 'done' so we just wait for it to stop doing things and 
+# determine that it has now finished the expected analysis
 idle_count = 0
 completed_jobs = -1
 while idle_count < 30:
