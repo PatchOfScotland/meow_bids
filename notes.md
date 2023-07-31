@@ -22,12 +22,4 @@
     sudo apt install npm
     npm install -g bids-validator
 
-## REFERENCES
-https://www.nature.com/articles/sdata201644
-https://static-curis.ku.dk/portal/files/308376588/PET_BIDS_an_extension_to_the_brain.pdf
-https://github.com/bids-standard/bids-starter-kit/blob/main/src/tutorials/pet.md
-https://reproducibility.stanford.edu/bids-tutorial-series-part-1a/
-
-https://www.nitrc.org
-david_marchant
-1q2w3e4r5t6y
+## Get source data

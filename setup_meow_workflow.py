@@ -11,9 +11,9 @@ from meow_base.core.runner import MeowRunner
 from meow_base.core.vars import DIR_CREATE_EVENT, DIR_MODIFY_EVENT, \
     DIR_RETROACTIVE_EVENT, NOTIFICATION_EMAIL, NOTIFICATION_MSG, \
     DEFAULT_JOB_OUTPUT_DIR, DEFAULT_JOB_QUEUE_DIR
-from meow_base.conductors import LocalBashConductor, LocalPythonConductor
+from meow_base.conductors import LocalBashConductor
 from meow_base.patterns import FileEventPattern, WatchdogMonitor
-from meow_base.recipes import BashRecipe, BashHandler, PythonRecipe, PythonHandler
+from meow_base.recipes import BashRecipe, BashHandler
 from meow_base.functionality.file_io import read_file_lines, make_dir, rmtree
 from meow_base.functionality.meow import assemble_patterns_dict, \
     assemble_recipes_dict
@@ -56,7 +56,6 @@ for d in [ raw_dir, validating_dir, analysing_dir, user_dir, result_dir ]:
     p = os.path.join(base_dir, d)
     make_dir(p, can_exist=True)
 
-# Only load first two sessions, the last will be added later
 for subject, files in raw_files.items():
     for t in files[0]:
         target = os.path.join(base_dir, raw_dir, dataset, subject, t)
